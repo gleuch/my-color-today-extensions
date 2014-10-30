@@ -1,0 +1,6 @@
+# Cache-crap files
+.DS_Store
+._*
+
+# Folders
+tmp/
