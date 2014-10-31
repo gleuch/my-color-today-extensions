@@ -1,29 +1,31 @@
 {
-    "author": "Greg Leuch",
-    "background": {
-        "persistent": true,
-        "scripts": [
-            "background.js"
-        ]
+  "author": "Greg Leuch",
+  "background": {
+    "persistent": true,
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": {
+      "38": "browseraction38.png"
     },
-    "browser_action": {
-      "default_icon": {
-        "38": "browseraction38.png"
-      },
-      "default_popup": "popup.html"
-    },
-    "description": "Visualize your internet browsing.",
-    "homepage_url": "https://gleu.ch/projects/my-internet-color",
-    "icons": {
-        "128": "icon128.png"
-    },
-    "manifest_version": 2,
-    "name": "Your Internet Color",
-    "permissions": [
-        "storage",
-        "webRequest",
-        "<all_urls>"
-    ],
-    "short_name": "YourNetColor",
-    "version": "0.1"
+    "default_popup": "popup.html"
+  },
+  "description": "Visualize your internet browsing.",
+  "homepage_url": "https://gleu.ch/projects/my-internet-color",
+  "icons": {
+    "128": "icon128.png"
+  },
+  "manifest_version": 2,
+  "name": "Your Internet Color",
+  "permissions": [
+    "storage",
+    "tabs",
+    "unlimitedStorage",
+    "webRequest",
+    "<all_urls>"
+  ],
+  "short_name": "YourNetColor",
+  "version": "0.1"
 }
