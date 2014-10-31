@@ -112,6 +112,8 @@ YourInternetColor.prototype.processPageForColor = function(data,s) {
               _t.storePageResults({url: s.tab.url, hex: _t.rgbToHex(pixel), rgb: {r: pixel[0], g: pixel[1], b: pixel[2]}});
             };
             image.src = dataURI;
+          } else {
+            _t.storePageResults({url: s.tab.url, hex: null, rgb: null});
           }
         });
       }, 250);
