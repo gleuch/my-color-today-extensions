@@ -82,38 +82,39 @@ YourInternetColor.prototype.processPageForColor = function(data,s) {
   // We need visible tab, so switch it over, then switch back (if prev was not self)
   chrome.tabs.query({active: true, windowId: s.tab.windowId}, function(tab) {
     prevTabId = tab[0].id;
-    // 
+
     // if (_t.preventFlickering && tabId != prevTabId) {
     //   console.log('Tab not visible, aborting capture', s.tab.url);
     //   return;
     // }
 
     // Make tab visible, capture screenshot
-    chrome.tabs.update(tabId, {active: true}, function(t) {
-      chrome.tabs.captureVisibleTab(null, {format: 'png'}, function(dataURI) {
-        // Switch back to other tab after capture
-        if (tabId != prevTabId) chrome.tabs.update(prevTabId, {active: true}, function(t) {});
+    chrome.tabs.update(tabId, {active: true, highlighted: true}, function(t) {
+      // Pause it every so slightly before flipping back to other tab. sometimes get internal errors if to quick.
+      setTimeout(function() {
+        chrome.tabs.captureVisibleTab(s.tab.windowId, {format: 'png'}, function(dataURI) {
+          // Switch back to other tab after capture
+          if (tabId != prevTabId) chrome.tabs.update(prevTabId, {active: true}, function(t) {});
 
-        // Send message, go back to previous scroll position
-        // TODO
+          // Send message, go back to previous scroll position
+          // TODO
 
-        // Process through image
-        if (dataURI) {
-          var image = new Image();
-          image.onload = function() {
-            var canvas = document.createElement('canvas'), ctx, pixel;
-            canvas.width = 1;
-            canvas.height = 1;
-            ctx = canvas.getContext('2d');
-            ctx.drawImage(image,0,0,1,1);
-            pixel = ctx.getImageData(0,0,1,1).data;
-            _t.storePageResults({url: s.tab.url, hex: _t.rgbToHex(pixel), rgb: {r: pixel[0], g: pixel[1], b: pixel[2]}});
-          };
-          image.src = dataURI;
-        } else {
-          console.log('Unable to load screenshot', s.tab.url);
-        }
-      });
+          // Process through image
+          if (dataURI) {
+            var image = new Image();
+            image.onload = function() {
+              var canvas = document.createElement('canvas'), ctx, pixel;
+              canvas.width = 1;
+              canvas.height = 1;
+              ctx = canvas.getContext('2d');
+              ctx.drawImage(image,0,0,1,1);
+              pixel = ctx.getImageData(0,0,1,1).data;
+              _t.storePageResults({url: s.tab.url, hex: _t.rgbToHex(pixel), rgb: {r: pixel[0], g: pixel[1], b: pixel[2]}});
+            };
+            image.src = dataURI;
+          }
+        });
+      }, 250);
     });
   })
 
@@ -122,8 +123,6 @@ YourInternetColor.prototype.processPageForColor = function(data,s) {
 
 // Store your browsing info to server. Easiest is to call as image.
 YourInternetColor.prototype.storePageResults = function(data) {
-  console.log(data)
-
   var _t = this, page_info = {},
       date_key = _t.storageDateKey(), 
       page_key = 'page:' + _t.storagePageKey();
