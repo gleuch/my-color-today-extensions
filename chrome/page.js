@@ -16,13 +16,11 @@ var YourInternetColorPage = function() {};
 
 // Setup and wait...
 YourInternetColorPage.prototype.start = function() {
-  var _t = this;
-
   // Check if window.onload has already fired
   if (document.readyState == 'complete') {
-    _t.triggerResponse();
+    this.triggerResponse();
   } else {
-    window.onload = function() { _t.triggerResponse(); };
+    window.onload = function() { this.triggerResponse(); }.bind(this);
   }
 
 }
@@ -39,7 +37,7 @@ YourInternetColorPage.prototype.triggerResponse = function() {
   };
 
   setTimeout(function() {
-    chrome.extension.sendRequest(data, function() {});
+    chrome.extension.sendRequest(data, function() {}.bind(this));
   }, 100);
 
 };
