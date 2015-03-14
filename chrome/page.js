@@ -1,7 +1,7 @@
 /*
 * Your Internet Color
 * a piece by @gleuch <http://gleu.ch>
-* (c)2014, all rights reserved
+* (c)2015, all rights reserved
 *
 * -----------------------------------------------------------------------------
 *
@@ -38,8 +38,8 @@ YourInternetColorPage.prototype.triggerResponse = function() {
     // pageHeight: document.body.clientHeight,
   };
 
-  chrome.extension.sendRequest(data, function() {});
-
-  // listen feedback
+  setTimeout(function() {
+    chrome.extension.sendRequest(data, function() {});
+  }, 100);
 
 };

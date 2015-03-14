@@ -3,6 +3,9 @@
   "background": {
     "persistent": true,
     "scripts": [
+      "js/jquery-1.11.2.min.js",
+      "js/color-thief-2.0.js",
+      "js/resample-hermite.js",
       "background.js"
     ]
   },
@@ -24,6 +27,7 @@
     "tabs",
     "unlimitedStorage",
     "webRequest",
+    "webRequestBlocking",
     "<all_urls>"
   ],
   "short_name": "Color.Camp",
