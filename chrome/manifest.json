@@ -4,6 +4,8 @@
     "persistent": true,
     "scripts": [
       "js/jquery-1.11.2.min.js",
+      "js/color-thief-2.0.js",
+      "js/resample-hermite.js",
       "background.js"
     ]
   },
@@ -13,7 +15,7 @@
     },
     "default_popup": "popup.html"
   },
-  "description": "Visualize your internet browsing.",
+  "description": "Visualize your Internet browsing.",
   "homepage_url": "https://gleu.ch/projects/my-internet-color",
   "icons": {
     "128": "icon128.png"

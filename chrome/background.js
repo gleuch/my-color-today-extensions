@@ -25,7 +25,6 @@
 */
 
 
-
 // Initialize the script
 var YourInternetColor = function() {
   var d = new Date();
@@ -168,12 +167,16 @@ jQuery.extend(true, YourInternetColor.prototype, {
             if (dataURI) {
               var image = new Image();
               image.onload = function() {
-                var canvas = document.createElement('canvas'), ctx, pixel;
-                canvas.width = 1;
-                canvas.height = 1;
-                ctx = canvas.getContext('2d');
-                ctx.drawImage(image,0,0,1,1);
+                var canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'), pixel;
+                canvas.width = this.width;
+                canvas.height = this.height;
+
+                ctx.drawImage(this, 0, 0, this.width, this.height);
+                resample_hermite(canvas, this.width, this.height, 1, 1);
+                // ctx.drawImage(this,0,0,1,1);
+
                 pixel = ctx.getImageData(0,0,1,1).data;
+
                 _t.storePageResults({url: s.tab.url, hex: _t.rgbToHex(pixel), rgb: {r: pixel[0], g: pixel[1], b: pixel[2]}});
               };
               image.src = dataURI;
