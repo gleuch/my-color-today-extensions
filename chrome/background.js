@@ -153,10 +153,14 @@ jQuery.extend(true, YourInternetColor.prototype, {
       // }
 
       // Make tab visible, capture screenshot
-      chrome.tabs.update(tabId, {active: true, highlighted: true}, function(t) {
+      chrome.tabs.update(tabId, {active: true}, function(t) {
         // Pause it every so slightly before flipping back to other tab. sometimes get internal errors if to quick.
         setTimeout(function() {
-          chrome.tabs.captureVisibleTab(s.tab.windowId, {format: 'png'}, function(dataURI) {
+          chrome.tabs.captureVisibleTab(t.windowId, {format: 'png'}, function(dataURI) {
+            if (chrome.runtime.lastError) {
+              return false;
+            }
+
             // Switch back to other tab after capture
             if (tabId != prevTabId) chrome.tabs.update(prevTabId, {active: true}, function(t) {});
 
@@ -212,7 +216,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
       chrome.storage.local.set(page_info, function() {});
 
       // Send to server
-      if (_t.hasAuthToken() && !_t.isEmptyObject(data.rgb)) {
+      if (_t.hasAuthToken() && data.rgb && data.rgb.r) {
         jQuery.ajax(_t.endpoints.url('colors/create'), {
           method: 'POST',
           data : {
