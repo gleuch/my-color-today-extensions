@@ -38,15 +38,13 @@ var YourInternetColor = function() {
   this.endpoints = jQuery.extend(true, this.endpoints, {
     domain : 'color.camp',
     protocol : 'https',
-    ws : 'wss',
     path_prefix : '/api'
   });
 
   // DEV MODE
-  this.endpoints.domain = 'lh.dev:3000';
+  this.endpoints.domain = 'lh.dev';
   this.endpoints.protocol = 'http';
-  this.endpoints.ws = 'ws';
-
+  this.endpoints.port = '3000';
 
   var _t = this;
 
@@ -61,11 +59,9 @@ var YourInternetColor = function() {
   }, { types: ["main_frame"], urls: ["<all_urls>"] }, []);
 
   // Add canvas element, used to generate the BrowserAction icon with the average color
-  var c = document.createElement('canvas');
-  c.setAttribute('id', _t.icon_canvas_id);
-  c.setAttribute('width', 38);
-  c.setAttribute('height', 38);
-  document.body.appendChild(c);
+  var c = $('<canvas />')
+  c.attr('id', _t.icon_canvas_id).attr('width', 38).attr('height', 38);
+  $('body').append(c);
 
   // First-time setup process
   _t.firstTimeSetup();
@@ -79,6 +75,10 @@ var YourInternetColor = function() {
 // --- FIRST TIME SETUP -------------------------------------------------------
 //
 jQuery.extend(true, YourInternetColor.prototype, {
+  hasAuthToken : function() {
+    return (typeof(this.auth.token) != 'undefined' && this.auth.token != '');
+  },
+
   firstTimeSetup : function() {
     var _t = this;
 
@@ -86,7 +86,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
       if (typeof(items['auth-token']) == 'undefined' || items['auth-token'] == '') {
         _t.getAuthToken();
       } else {
-        _t.auth.token = items['auth-token'];
+        _t.auth = items['auth-token'];
       }
     });  
   },
@@ -94,7 +94,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
   getAuthToken : function() {
     var _t = this;
 
-    jQuery.ajax(this.endpoints.url('auth_token'), {
+    jQuery.ajax(this.endpoints.url('auth/token'), {
       method: 'POST',
       data : {
         token_key : _t.auth.token,
@@ -177,11 +177,12 @@ jQuery.extend(true, YourInternetColor.prototype, {
                 _t.storePageResults({url: s.tab.url, hex: _t.rgbToHex(pixel), rgb: {r: pixel[0], g: pixel[1], b: pixel[2]}});
               };
               image.src = dataURI;
+
             } else {
               _t.storePageResults({url: s.tab.url, hex: null, rgb: null});
             }
           });
-        }, 250);
+        }, 100);
       });
     })
 
@@ -206,6 +207,26 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
       page_info[date_key] = date_list;
       chrome.storage.local.set(page_info, function() {});
+
+      // Send to server
+      if (_t.hasAuthToken() && !_t.isEmptyObject(data.rgb)) {
+        jQuery.ajax(_t.endpoints.url('colors/create'), {
+          method: 'POST',
+          data : {
+            url : data.url,
+            color: {
+              red: data.rgb.r,
+              green: data.rgb.g,
+              blue: data.rgb.b,
+            }
+          },
+          headers : {
+            'Authorization' : 'Token token=' + _t.auth.token,
+          },
+          success : function(d,s,x) { },
+          error : function(x,s,e) { }
+        });
+      }
     });
   }
 });
@@ -293,15 +314,16 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 // --- ENDPOINTS --------------------------------------------------------------
 jQuery.extend(true, YourInternetColor.prototype, {
+
   endpoints : {
-    
     url : function(action,ws) {
       if (typeof(this[action]) != 'string' || action.match(/^(domain|ws|protocol|path_prefix|ws_prefix)$/i)) return null;
-      return (ws ? [this.ws, '://', this.domain, this.ws_prefix, this[action]] : [this.protocol, '://', this.domain, this.path_prefix, this[action]]) .join('');
+      var url = this.protocol + '://' + this.domain + (this.port ? ':' + this.port : '');
+      return [url, this.path_prefix, this[action]].join('');
     },
 
-    auth_token : '/tokens',
-    colors_post : '/history'
+    'auth/token' : '/tokens',
+    'colors/create' : '/history'
   }
 });
 
@@ -324,7 +346,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
   hexToRgb: function(hex) {var i = parseInt(hex, 16); return [((i >> 16) & 255), ((i >> 8) & 255), (i & 255)];},
 
   // empty object
-  isEmptyObject: function(items) {try {return Object.getOwnPropertyNames(items).length > 0;} catch(e) {return false;}}
+  isEmptyObject: function(items) {try {return Object.getOwnPropertyNames(items).length < 1;} catch(e) {return false;}}
   
 });
 

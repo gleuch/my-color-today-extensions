@@ -38,8 +38,8 @@ YourInternetColorPage.prototype.triggerResponse = function() {
     // pageHeight: document.body.clientHeight,
   };
 
-  chrome.extension.sendRequest(data, function() {});
-
-  // listen feedback
+  setTimeout(function() {
+    chrome.extension.sendRequest(data, function() {});
+  }, 100);
 
 };
