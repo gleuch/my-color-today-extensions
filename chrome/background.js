@@ -181,12 +181,25 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
                 pixel = ctx.getImageData(0,0,1,1).data;
 
-                _t.storePageResults({url: s.tab.url, hex: _t.rgbToHex(pixel), rgb: {r: pixel[0], g: pixel[1], b: pixel[2]}});
+                var paletteColors = new ColorThief();
+                palette = paletteColors.getColor(this, 5);
+
+                _t.storePageResults({
+                  url: s.tab.url, 
+                  average: {
+                    hex: _t.rgbToHex(pixel), 
+                    rgb: {r: pixel[0], g: pixel[1], b: pixel[2]},
+                  },
+                  palette: {
+                    hex: _t.rgbToHex(pixel), 
+                    rgb: {r: palette[0], g: palette[1], b: palette[2]}
+                  },
+                });
               };
               image.src = dataURI;
 
             } else {
-              _t.storePageResults({url: s.tab.url, hex: null, rgb: null});
+              _t.storePageResults({url: s.tab.url, average: {hex: null, rgb: null}, palette: {hex: null, rgb: null}});
             }
           });
         }, 100);
@@ -216,15 +229,20 @@ jQuery.extend(true, YourInternetColor.prototype, {
       chrome.storage.local.set(page_info, function() {});
 
       // Send to server
-      if (_t.hasAuthToken() && data.rgb && data.rgb.r) {
+      if (_t.hasAuthToken() && data.average && data.average.rgb && data.average.rgb.r) {
         jQuery.ajax(_t.endpoints.url('colors/create'), {
           method: 'POST',
           data : {
             url : data.url,
-            color: {
-              red: data.rgb.r,
-              green: data.rgb.g,
-              blue: data.rgb.b,
+            average_color: {
+              red: data.average.rgb.r,
+              green: data.average.rgb.g,
+              blue: data.average.rgb.b,
+            },
+            dominant_color: {
+              red: data.palette.rgb.r,
+              green: data.palette.rgb.g,
+              blue: data.palette.rgb.b,
             }
           },
           headers : {
