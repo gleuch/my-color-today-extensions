@@ -33,6 +33,7 @@ var YourInternetColor = function() {
   this.icon_canvas_id = 'iconcolorcanvas';
   this.msgName = 'yourInternetColor_' + d.getTime();
   this.auth = {token: null, secret: null, csrf: null};
+  this.history = [];
 
   this.endpoints = jQuery.extend(true, this.endpoints, {
     domain : 'color.camp',
@@ -91,6 +92,9 @@ jQuery.extend(true, YourInternetColor.prototype, {
           _t.requireSignup();
         }
       }
+
+      // Connect and show visual in chrome://newtab
+      _t.prepareNewTabVisual();
     });
   },
 
@@ -330,7 +334,11 @@ jQuery.extend(true, YourInternetColor.prototype, {
           headers : {
             'Authorization' : 'Token token=' + _t.auth.token,
           },
-          success : function(d,s,x) { },
+          success : function(d,s,x) {
+            if (d && d.color) {
+              _t.appendToColorHistory(d.color);
+            }
+          },
           error : function(x,s,e) { }
         });
       }
@@ -393,6 +401,46 @@ jQuery.extend(true, YourInternetColor.prototype, {
 });
 
 
+// --- NEWTAB VISUAL ----------------------------------------------------------
+
+jQuery.extend(true, YourInternetColor.prototype, {
+  // Get latest history, prepare to appending
+  prepareNewTabVisual : function() {
+    // var _t = this;
+    //
+    // // Get latest from history
+    // jQuery.ajax(_t.endpoints.api_url('colors'), {
+    //   method: 'GET',
+    //   data : {},
+    //   headers : {
+    //     'Authorization' : 'Token token=' + _t.auth.token,
+    //   },
+    //   success : function(d,s,x) {
+    //     if (d.success && d.colors) {
+    //       $.each(d.colors, function(i,v) {
+    //         _t.history.push(v)
+    //       });
+    //     }
+    //   },
+    //   error : function(x,s,e) { }
+    // });
+  },
+
+  sendColorHistory : function(all) {
+    // proto websocket
+  },
+
+  // Add to color history, last 100 or so.
+  appendToColorHistory : function(d) {
+    // var _t = this;
+    // _t.history.unshift(d);
+    // // TODO : slice after 100
+  }
+  
+
+});
+
+
 // --- URL FILTERING & BLACKLISTS ---------------------------------------------
 jQuery.extend(true, YourInternetColor.prototype, {
   // Check URL and ip address against blacklisted sites/ips
@@ -437,6 +485,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
     'signup' : '/signup',
     'auth/token' : '/tokens',
+    'colors' : '/history',
     'colors/create' : '/history'
   }
 });

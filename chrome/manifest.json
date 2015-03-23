@@ -31,7 +31,7 @@
     "<all_urls>"
   ],
   "short_name": "YourNetColor",
-  "version": "0.1",
+  "version": "0.2",
   "externally_connectable": {
     "matches": [
       "*://color.camp/*",
