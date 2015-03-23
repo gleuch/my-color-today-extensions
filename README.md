@@ -14,6 +14,6 @@
 
 
 
-(C) 2014 Greg Leuch. http://gleu.ch
+(C) 2015 Greg Leuch. http://gleu.ch
 
 Related: http://whatcolor.istheinter.net & https://github.com/gleuch/my-internet-color

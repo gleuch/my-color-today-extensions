@@ -1,7 +1,7 @@
 /*
 * Your Internet Color
 * a piece by @gleuch <http://gleu.ch>
-* (c)2014, all rights reserved
+* (c)2015, all rights reserved
 *
 * -----------------------------------------------------------------------------
 *

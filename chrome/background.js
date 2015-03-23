@@ -1,7 +1,7 @@
 /*
 * Your Internet Color
 * a piece by @gleuch <http://gleu.ch>
-* (c)2014, all rights reserved
+* (c)2015, all rights reserved
 *
 * -----------------------------------------------------------------------------
 *
@@ -86,14 +86,18 @@ jQuery.extend(true, YourInternetColor.prototype, {
         _t.getAuthToken();
       } else {
         _t.auth = items['auth-token'];
+
+        if (typeof(_t.auth.user) == 'undefined' || !_t.auth.user) {
+          _t.requireSignup();
+        }
       }
-    });  
+    });
   },
 
   getAuthToken : function() {
     var _t = this;
 
-    jQuery.ajax(this.endpoints.url('auth/token'), {
+    jQuery.ajax(this.endpoints.api_url('auth/token'), {
       method: 'POST',
       data : {
         token_key : _t.auth.token,
@@ -103,10 +107,15 @@ jQuery.extend(true, YourInternetColor.prototype, {
         if (d && typeof(d.authentication) != 'undefined') {
           // Update tokens
           jQuery.extend(_t.auth, {
+            user : d.authentication.user,
             token : d.authentication.token_key,
             secret : d.authentication.token_secret,
             csrf : x.getResponseHeader('X-CSRF-Token')
           });
+
+          if (!_t.auth.user || typeof(_t.auth.user) == 'undefined') {
+            _t.requireSignup();
+          }
 
           // Set tokens into storage for retrieval again
           chrome.storage.local.set({'auth-token' : _t.auth}, function() {});
@@ -119,7 +128,80 @@ jQuery.extend(true, YourInternetColor.prototype, {
         setTimeout(function() {_t.getAuthToken();}, 30000);
       }
     });
-  }
+  },
+
+  getCurrentAuthToken : function() {
+    var _t = this;
+
+    jQuery.ajax(this.endpoints.api_url('auth/token'), {
+      method: 'GET',
+      data : {},
+      headers : {
+        'Authorization' : 'Token token=' + _t.auth.token,
+      },
+      success : function(d,s,x) {
+        if (d && typeof(d.authentication) != 'undefined') {
+          // Update tokens
+          jQuery.extend(_t.auth, {
+            user : d.authentication.user,
+            token : d.authentication.token_key,
+            secret : d.authentication.token_secret,
+            csrf : x.getResponseHeader('X-CSRF-Token')
+          });
+
+          // Set tokens into storage for retrieval again
+          chrome.storage.local.set({'auth-token' : _t.auth}, function() {});
+
+        } else {
+          setTimeout(function() {_t.getCurrentAuthToken();}, 30000);
+        }
+      },
+      error : function(x,s,e) {
+        setTimeout(function() {_t.getCurrentAuthToken();}, 30000);
+      }
+    });
+  },
+
+  requireSignup : function() {
+    var _t = this;
+
+    // Include authorization header for signup popup
+    chrome.webRequest.onBeforeSendHeaders.addListener(
+      function(d) {
+        for (var i = 0; i < d.requestHeaders.length; ++i) {
+          if (d.requestHeaders[i].name === 'Authorization') {
+            d.requestHeaders.splice(i, 1);
+            break;
+          }
+        }
+        d.requestHeaders.push({name: 'Authorization', value: 'Token token=' + _t.auth.token});
+        return {requestHeaders: d.requestHeaders};
+      },
+      {urls: ["http://lh.dev:3000/signup*", "*://color.camp/signup*"]},
+      ["blocking", "requestHeaders"]
+    );
+
+    // open popup
+    chrome.windows.create({
+      type : 'popup',
+      url : _t.endpoints.public_url('signup', {'app': 'chrome'}),
+    }, function(w) {
+      _t.signupWindow = w;
+    });
+
+    // listen for msg from web site
+    chrome.runtime.onMessageExternal.addListener(function(m,s,r) {
+      if (m.action == 'reload-auth') {
+        _t.getCurrentAuthToken();
+      }
+
+      if (m.closeWindow && _t.signupWindow) {
+        chrome.windows.remove(_t.signupWindow.id, function() {
+          _t.signupWindow = null;
+        });
+      }
+    });
+  },
 });
 
 
@@ -230,7 +312,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
       // Send to server
       if (_t.hasAuthToken() && data.average && data.average.rgb && data.average.rgb.r) {
-        jQuery.ajax(_t.endpoints.url('colors/create'), {
+        jQuery.ajax(_t.endpoints.api_url('colors/create'), {
           method: 'POST',
           data : {
             url : data.url,
@@ -341,12 +423,19 @@ jQuery.extend(true, YourInternetColor.prototype, {
 jQuery.extend(true, YourInternetColor.prototype, {
 
   endpoints : {
-    url : function(action,ws) {
+    api_url : function(action,data) {
       if (typeof(this[action]) != 'string' || action.match(/^(domain|ws|protocol|path_prefix|ws_prefix)$/i)) return null;
       var url = this.protocol + '://' + this.domain + (this.port ? ':' + this.port : '');
-      return [url, this.path_prefix, this[action]].join('');
+      return [url, this.path_prefix, this[action]].join('') + (typeof(data) == 'object' ? '?' + $.param(data) : '');
     },
 
+    public_url : function(action,data) {
+      if (typeof(this[action]) != 'string' || action.match(/^(domain|ws|protocol|path_prefix|ws_prefix)$/i)) return null;
+      var url = this.protocol + '://' + this.domain + (this.port ? ':' + this.port : '');
+      return [url, this[action]].join('') + (typeof(data) == 'object' ? '?' + $.param(data) : '');
+    },
+
+    'signup' : '/signup',
     'auth/token' : '/tokens',
     'colors/create' : '/history'
   }
