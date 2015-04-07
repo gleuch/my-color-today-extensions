@@ -27,13 +27,14 @@
 
 // Initialize the script
 var YourInternetColor = function() {
-  var d = new Date();
+  var d = new Date(), tabActiveTimeout;
 
   this.check_intv = null;
   this.icon_canvas_id = 'iconcolorcanvas';
   this.msgName = 'yourInternetColor_' + d.getTime();
   this.auth = {token: null, secret: null, csrf: null};
   this.history = [];
+  this.observeTabs = {};
 
   this.endpoints = jQuery.extend(true, this.endpoints, {
     domain : 'color.camp',
@@ -50,13 +51,24 @@ var YourInternetColor = function() {
 
   // Listen for response messages from content scripts
   chrome.extension.onRequest.addListener(function(req,s,cb) {
-    if (req.name == _t.msgName) _t.processPageForColor(req,s);
+    if (req.name == _t.msgName) _t.preparePageForColor(req,s);
   });
 
   // Listen only for completed web pages from main_frame (parent level). This does not listen for changes in history caused by push/pop/replaceState.
   chrome.webRequest.onCompleted.addListener(function(obj) { 
     _t.checkWindowLoaded(obj);
   }, { types: ["main_frame"], urls: ["<all_urls>"] }, []);
+
+  // Listen for tab focus changes
+  chrome.tabs.onActivated.addListener(function(obj) {
+    clearTimeout(tabActiveTimeout);
+    tabActiveTimeout = setTimeout(function() {
+      chrome.tabs.get(obj.tabId, function(tab) {
+        _t.checkTabLoaded(tab);
+      });
+    }, 500);
+  });
+
 
   // Add canvas element, used to generate the BrowserAction icon with the average color
   var c = $('<canvas />')
@@ -212,6 +224,19 @@ jQuery.extend(true, YourInternetColor.prototype, {
 // --- PAGE PROCESSING --------------------------------------------------------
 // Send content script to message back when window has loaded (images, etc.)
 jQuery.extend(true, YourInternetColor.prototype, {
+  checkTabLoaded : function(tab) {
+    var _t = this, info = _t.observeTabs[tab.id];
+
+    // Ensure tab observer exists
+    if (typeof(info) != 'undefined') {
+      // Process only if url is same.
+      if (info.url == tab.url) {
+        _t.processPageForColor(_t.observeTabs[tab.id].data, _t.observeTabs[tab.id].msg);
+      }
+      delete(_t.observeTabs[tab.id]);
+    }
+  },
+
   checkWindowLoaded : function(obj) {
     var _t = this;
 
@@ -226,73 +251,67 @@ jQuery.extend(true, YourInternetColor.prototype, {
   },
 
   // Process through the color result
-  processPageForColor : function(data,s) {
-    var _t = this, tabId = s.tab.id, prevTabId = tabId;
+  processPageForColor : function(data,msg) {
+    var _t = this, tabId = msg.tab.id;
+
+    // Pause it every so slightly before flipping back to other tab. sometimes get internal errors if to quick.
+    chrome.tabs.captureVisibleTab(msg.tab.windowId, {format: 'png'}, function(dataURI) {
+      if (chrome.runtime.lastError) {
+        return false;
+      }
+
+      // Send message, go back to previous scroll position
+      // TODO
+
+      // Process through image
+      if (dataURI) {
+        var image = new Image();
+        image.onload = function() {
+          var canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'), pixel;
+          canvas.width = this.width;
+          canvas.height = this.height;
+
+          ctx.drawImage(this, 0, 0, this.width, this.height);
+          resample_hermite(canvas, this.width, this.height, 1, 1);
+          // ctx.drawImage(this,0,0,1,1);
+
+          pixel = ctx.getImageData(0,0,1,1).data;
+
+          var paletteColors = new ColorThief();
+          palette = paletteColors.getColor(this, 5);
+
+          _t.storePageResults({
+            url: msg.tab.url, 
+            average: {
+              hex: _t.rgbToHex(pixel), 
+              rgb: {r: pixel[0], g: pixel[1], b: pixel[2]},
+            },
+            palette: {
+              hex: _t.rgbToHex(pixel), 
+              rgb: {r: palette[0], g: palette[1], b: palette[2]}
+            },
+          });
+        };
+        image.src = dataURI;
+
+      } else {
+        _t.storePageResults({url: msg.tab.url, average: {hex: null, rgb: null}, palette: {hex: null, rgb: null}});
+      }
+    });
+  },
+
+  // Process through the color result
+  preparePageForColor : function(data,msg) {
+    var _t = this, tabId = msg.tab.id;
 
     // We need visible tab, so switch it over, then switch back (if prev was not self)
-    chrome.tabs.query({active: true, windowId: s.tab.windowId}, function(tab) {
-      prevTabId = tab[0].id;
-
-      // if (_t.preventFlickering && tabId != prevTabId) {
-      //   console.log('Tab not visible, aborting capture', s.tab.url);
-      //   return;
-      // }
-
-      // Make tab visible, capture screenshot
-      chrome.tabs.update(tabId, {active: true}, function(t) {
-        // Pause it every so slightly before flipping back to other tab. sometimes get internal errors if to quick.
-        setTimeout(function() {
-          chrome.tabs.captureVisibleTab(t.windowId, {format: 'png'}, function(dataURI) {
-            if (chrome.runtime.lastError) {
-              return false;
-            }
-
-            // Switch back to other tab after capture
-            if (tabId != prevTabId) chrome.tabs.update(prevTabId, {active: true}, function(t) {});
-
-            // Send message, go back to previous scroll position
-            // TODO
-
-            // Process through image
-            if (dataURI) {
-              var image = new Image();
-              image.onload = function() {
-                var canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'), pixel;
-                canvas.width = this.width;
-                canvas.height = this.height;
-
-                ctx.drawImage(this, 0, 0, this.width, this.height);
-                resample_hermite(canvas, this.width, this.height, 1, 1);
-                // ctx.drawImage(this,0,0,1,1);
-
-                pixel = ctx.getImageData(0,0,1,1).data;
-
-                var paletteColors = new ColorThief();
-                palette = paletteColors.getColor(this, 5);
-
-                _t.storePageResults({
-                  url: s.tab.url, 
-                  average: {
-                    hex: _t.rgbToHex(pixel), 
-                    rgb: {r: pixel[0], g: pixel[1], b: pixel[2]},
-                  },
-                  palette: {
-                    hex: _t.rgbToHex(pixel), 
-                    rgb: {r: palette[0], g: palette[1], b: palette[2]}
-                  },
-                });
-              };
-              image.src = dataURI;
-
-            } else {
-              _t.storePageResults({url: s.tab.url, average: {hex: null, rgb: null}, palette: {hex: null, rgb: null}});
-            }
-          });
-        }, 100);
-      });
-    })
-
-    // {url: url, hex: null, rgb: {r: null, g: null, b: null}}
+    chrome.tabs.query({active: true, windowId: msg.tab.windowId}, function(tab) {
+      if (tabId == tab[0].id) {
+        _t.processPageForColor(data,msg);
+      } else {
+        _t.observeTabs[tabId] = {url: msg.url, data: data, msg: msg};
+      }
+    });
   },
 
   // Store your browsing info to server. Easiest is to call as image.
