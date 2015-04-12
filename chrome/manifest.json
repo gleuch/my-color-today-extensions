@@ -12,13 +12,13 @@
     },
     "default_popup": "popup.html"
   },
-  "description": "Visualize your internet browsing.",
-  "homepage_url": "https://gleu.ch/projects/my-internet-color",
+  "description": "Visualize your Internet browsing.",
+  "homepage_url": "https://color.camp",
   "icons": {
     "128": "icon128.png"
   },
   "manifest_version": 2,
-  "name": "Your Internet Color",
+  "name": "Color Camp",
   "permissions": [
     "storage",
     "tabs",
@@ -26,6 +26,12 @@
     "webRequest",
     "<all_urls>"
   ],
-  "short_name": "YourNetColor",
-  "version": "0.1"
+  "short_name": "Color.Camp",
+  "version": "0.2",
+  "externally_connectable": {
+    "matches": [
+      "*://color.camp/*",
+      "http://lh.dev:3000/*"
+    ]
+  }
 }
