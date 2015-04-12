@@ -42,11 +42,6 @@ var YourInternetColor = function() {
     path_prefix : '/api'
   });
 
-  // DEV MODE
-  this.endpoints.domain = 'lh.dev';
-  this.endpoints.protocol = 'http';
-  this.endpoints.port = '3000';
-
   var _t = this;
 
   // Listen for response messages from content scripts

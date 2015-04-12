@@ -35,7 +35,6 @@
   "externally_connectable": {
     "matches": [
       "*://color.camp/*",
-      "http://lh.dev:3000/*"
     ]
   }
 }
