@@ -34,7 +34,7 @@
   "version": "0.2",
   "externally_connectable": {
     "matches": [
-      "*://color.camp/*",
+      "*://color.camp/*"
     ]
   }
 }
