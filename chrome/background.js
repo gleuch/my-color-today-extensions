@@ -421,7 +421,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
           // Process additional requests, if any
           this.resendIntv = setTimeout(function() {
             this.processPageResult();
-          }, this.resendIntvTime);
+          }.bind(this), this.resendIntvTime);
         }.bind(this));
       } catch(e) {
         // 
