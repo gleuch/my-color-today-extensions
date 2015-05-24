@@ -51,39 +51,37 @@ var YourInternetColor = function() {
   this.endpoints.protocol = 'http';
   this.endpoints.port = '3000';
 
-  var _t = this;
-
   // Listen for response messages from content scripts
   chrome.extension.onRequest.addListener(function(req,s,cb) {
-    if (req.name == _t.msgName) _t.preparePageForColor(req,s);
-  });
+    if (req.name == this.msgName) this.preparePageForColor(req,s);
+  }.bind(this));
 
   // Listen only for completed web pages from main_frame (parent level). This does not listen for changes in history caused by push/pop/replaceState.
   chrome.webRequest.onCompleted.addListener(function(obj) { 
-    _t.checkWindowLoaded(obj);
-  }, { types: ["main_frame"], urls: ["<all_urls>"] }, []);
+    this.checkWindowLoaded(obj);
+  }.bind(this), { types: ["main_frame"], urls: ["<all_urls>"] }, []);
 
   // Listen for tab focus changes
   chrome.tabs.onActivated.addListener(function(obj) {
     clearTimeout(tabActiveTimeout);
     tabActiveTimeout = setTimeout(function() {
       chrome.tabs.get(obj.tabId, function(tab) {
-        _t.checkTabLoaded(tab);
-      });
-    }, 500);
-  });
+        this.checkTabLoaded(tab);
+      }.bind(this));
+    }.bind(this), 500);
+  }.bind(this));
 
 
   // Add canvas element, used to generate the BrowserAction icon with the average color
   var c = $('<canvas />')
-  c.attr('id', _t.icon_canvas_id).attr('width', 38).attr('height', 38);
+  c.attr('id', this.icon_canvas_id).attr('width', 38).attr('height', 38);
   $('body').append(c);
 
   // Draw browseraction icon
-  _t.prepareBrowserActionIcon();
+  this.prepareBrowserActionIcon();
 
   // First-time setup process
-  _t.startInit();
+  this.startInit();
 };
 
 
@@ -92,39 +90,36 @@ var YourInternetColor = function() {
 jQuery.extend(true, YourInternetColor.prototype, {
   // Start initialize functions b checking if user has an auth token
   startInit : function() {
-    var _t = this;
-
     // Check if user has auth token
     chrome.storage.local.get('auth-token', function(items) {
       if (typeof(items['auth-token']) == 'undefined' || items['auth-token'] == '') {
-        _t.getAuthToken();
+        this.getAuthToken();
       } else {
-        _t.auth = items['auth-token'];
+        this.auth = items['auth-token'];
 
-        if (typeof(_t.auth.user) == 'undefined' || !_t.auth.user) {
-          _t.requireSignup();
+        if (typeof(this.auth.user) == 'undefined' || !this.auth.user) {
+          this.requireSignup();
         } else {
-          _t.completeInit();
+          this.completeInit();
         }
       }
 
       // Connect and show visual in chrome://newtab
-      _t.prepareNewTabVisual();
-    });
+      this.prepareNewTabVisual();
+
+    }.bind(this));
   },
 
   // Run actions for completed results
   completeInit : function() {
-    var _t = this;
-
     // Attempt to reprocess pages
-    _t.processPageResult();
+    this.processPageResult();
 
     // Update history and other info every few minutes
-    _t.historyIntv = setInterval(function() {
-      // TODO
-    }, _t.historyIntvTime);
-    
+    this.historyIntv = setInterval(function() {
+      this.getLatestColorHistory();
+    }.bind(this), this.historyIntvTime);
+    this.getLatestColorHistory();
   },
 
   // Check if auth token already assigned to variable
@@ -134,55 +129,55 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
   // Fetch a new authorize token from server
   getAuthToken : function() {
-    var _t = this;
-
     jQuery.ajax(this.endpoints.api_url('auth/token'), {
       method: 'POST',
       data : {
-        token_key : _t.auth.token,
-        token_secret : _t.auth.secret
+        token_key : this.auth.token,
+        token_secret : this.auth.secret
       },
       success : function(d,s,x) {
         if (d && typeof(d.authentication) != 'undefined') {
           // Update tokens
-          jQuery.extend(_t.auth, {
+          jQuery.extend(this.auth, {
             user : d.authentication.user,
             token : d.authentication.token_key,
             secret : d.authentication.token_secret,
             csrf : x.getResponseHeader('X-CSRF-Token')
           });
 
-          if (!_t.auth.user || typeof(_t.auth.user) == 'undefined') {
-            _t.requireSignup();
+          if (!this.auth.user || typeof(this.auth.user) == 'undefined') {
+            this.requireSignup();
           }
 
           // Set tokens into storage for retrieval again
-          chrome.storage.local.set({'auth-token' : _t.auth}, function() {});
+          chrome.storage.local.set({'auth-token' : this.auth}, function() {}.bind(this));
 
         } else {
-          setTimeout(function() {_t.getAuthToken();}, 30000);
+          setTimeout(function() {
+            this.getAuthToken();
+          }.bind(this), 30000);
         }
-      },
+      }.bind(this),
       error : function(x,s,e) {
-        setTimeout(function() {_t.getAuthToken();}, 30000);
-      }
-    });
+        setTimeout(function() {
+          this.getAuthToken();
+        }.bind(this), 30000);
+      }.bind(this)
+    }.bind(this));
   },
 
   // Get current authorize token from server
   getCurrentAuthToken : function() {
-    var _t = this;
-
     jQuery.ajax(this.endpoints.api_url('auth/token'), {
       method: 'GET',
       data : {},
       headers : {
-        'Authorization' : 'Token token=' + _t.auth.token,
+        'Authorization' : 'Token token=' + this.auth.token,
       },
       success : function(d,s,x) {
         if (d && typeof(d.authentication) != 'undefined') {
           // Update tokens
-          jQuery.extend(_t.auth, {
+          jQuery.extend(this.auth, {
             user : d.authentication.user,
             token : d.authentication.token_key,
             secret : d.authentication.token_secret,
@@ -190,23 +185,25 @@ jQuery.extend(true, YourInternetColor.prototype, {
           });
 
           // Set tokens into storage for retrieval again
-          chrome.storage.local.set({'auth-token' : _t.auth}, function() {
-            _t.completeInit();
-          });
+          chrome.storage.local.set({'auth-token' : this.auth}, function() {
+            this.completeInit();
+          }.bind(this));
 
         } else {
-          setTimeout(function() {_t.getCurrentAuthToken();}, 30000);
+          setTimeout(function() {
+            this.getCurrentAuthToken();
+          }.bind(this), 30000);
         }
-      },
+      }.bind(this),
       error : function(x,s,e) {
-        setTimeout(function() {_t.getCurrentAuthToken();}, 30000);
-      }
+        setTimeout(function() {
+          this.getCurrentAuthToken();
+        }.bind(this), 30000);
+      }.bind(this)
     });
   },
 
   requireSignup : function() {
-    var _t = this;
-
     // Include authorization header for signup popup
     chrome.webRequest.onBeforeSendHeaders.addListener(
       function(d) {
@@ -216,9 +213,9 @@ jQuery.extend(true, YourInternetColor.prototype, {
             break;
           }
         }
-        d.requestHeaders.push({name: 'Authorization', value: 'Token token=' + _t.auth.token});
+        d.requestHeaders.push({name: 'Authorization', value: 'Token token=' + this.auth.token});
         return {requestHeaders: d.requestHeaders};
-      },
+      }.bind(this),
       {urls: ["http://lh.dev:3000/signup*", "*://color.camp/signup*"]},
       ["blocking", "requestHeaders"]
     );
@@ -226,23 +223,23 @@ jQuery.extend(true, YourInternetColor.prototype, {
     // open popup
     chrome.windows.create({
       type : 'popup',
-      url : _t.endpoints.public_url('signup', {'app': 'chrome'}),
+      url : this.endpoints.public_url('signup', {'app': 'chrome'}),
     }, function(w) {
-      _t.signupWindow = w;
-    });
+      this.signupWindow = w;
+    }.bind(this));
 
     // listen for msg from web site
     chrome.runtime.onMessageExternal.addListener(function(m,s,r) {
       if (m.action == 'reload-auth') {
-        _t.getCurrentAuthToken();
+        this.getCurrentAuthToken();
       }
 
-      if (m.closeWindow && _t.signupWindow) {
-        chrome.windows.remove(_t.signupWindow.id, function() {
-          _t.signupWindow = null;
-        });
+      if (m.closeWindow && this.signupWindow) {
+        chrome.windows.remove(this.signupWindow.id, function() {
+          this.signupWindow = null;
+        }.bind(this));
       }
-    });
+    }.bind(this));
   },
 });
 
@@ -251,34 +248,34 @@ jQuery.extend(true, YourInternetColor.prototype, {
 // Send content script to message back when window has loaded (images, etc.)
 jQuery.extend(true, YourInternetColor.prototype, {
   checkTabLoaded : function(tab) {
-    var _t = this, info = _t.observeTabs[tab.id];
+    var info = this.observeTabs[tab.id];
 
     // Ensure tab observer exists
     if (typeof(info) != 'undefined') {
       // Process only if url is same.
       if (info.url == tab.url) {
-        _t.processPageForColor(_t.observeTabs[tab.id].data, _t.observeTabs[tab.id].msg);
+        this.processPageForColor(this.observeTabs[tab.id].data, this.observeTabs[tab.id].msg);
       }
-      delete(_t.observeTabs[tab.id]);
+      delete this.observeTabs[tab.id];
     }
   },
 
   checkWindowLoaded : function(obj) {
-    var _t = this;
-
     // Skip if not a URL or part of URL blacklist
-    if (_t.isValidPageRequest(obj.url, obj.ip)) {
+    if (this.isValidPageRequest(obj.url, obj.ip)) {
       // Load content script into tab
       chrome.tabs.executeScript(obj.tabId, {file: 'page.js'}, function() {
         // On success, run code to start load cheeck
-        chrome.tabs.executeScript(obj.tabId, {code: "this.yourInternetColorPage = new YourInternetColorPage(); this.yourInternetColorPage.msgName = '" + _t.msgName + "'; this.yourInternetColorPage.start();"}, function() {});
-      });
+        chrome.tabs.executeScript(obj.tabId, {
+          code: "this.yourInternetColorPage = new YourInternetColorPage(); this.yourInternetColorPage.msgName = '" + this.msgName + "'; this.yourInternetColorPage.start();"
+        }, function() {}.bind(this));
+      }.bind(this));
     }
   },
 
   // Process through the color result
   processPageForColor : function(data,msg) {
-    var _t = this, tabId = msg.tab.id;
+    var tabId = msg.tab.id;
 
     // Pause it every so slightly before flipping back to other tab. sometimes get internal errors if to quick.
     chrome.tabs.captureVisibleTab(msg.tab.windowId, {format: 'png'}, function(dataURI) {
@@ -291,6 +288,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
       // Process through image
       if (dataURI) {
+        var _t = this;
         var image = new Image();
         image.onload = function() {
           var canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'), pixel;
@@ -321,32 +319,29 @@ jQuery.extend(true, YourInternetColor.prototype, {
         image.src = dataURI;
 
       } else {
-        _t.queuePageResult({url: msg.tab.url, average: {hex: null, rgb: null}, palette: {hex: null, rgb: null}});
+        this.queuePageResult({url: msg.tab.url, average: {hex: null, rgb: null}, palette: {hex: null, rgb: null}});
       }
-    });
+    }.bind(this));
   },
 
   // Process through the color result
   preparePageForColor : function(data,msg) {
-    var _t = this, tabId = msg.tab.id;
+    var tabId = msg.tab.id;
 
     // We need visible tab, so switch it over, then switch back (if prev was not self)
     chrome.tabs.query({active: true, windowId: msg.tab.windowId}, function(tab) {
       if (tabId == tab[0].id) {
-        _t.processPageForColor(data,msg);
+        this.processPageForColor(data,msg);
       } else {
-        _t.observeTabs[tabId] = {url: msg.url, data: data, msg: msg};
+        this.observeTabs[tabId] = {url: msg.url, data: data, msg: msg};
       }
-    });
+    }.bind(this));
   },
 
   // Store your browsing info to server. Easiest is to call as image.
   sendPageResult : function(id,data) {
-    var _t = this;
-
-    // Send to server
-    if (_t.hasAuthToken()) {
-      jQuery.ajax(_t.endpoints.api_url('colors/create'), {
+    if (this.hasAuthToken()) {
+      jQuery.ajax(this.endpoints.api_url('colors/create'), {
         method: 'POST',
         data : {
           url : data.url,
@@ -362,27 +357,30 @@ jQuery.extend(true, YourInternetColor.prototype, {
           }
         },
         headers : {
-          'Authorization' : 'Token token=' + _t.auth.token,
+          'Authorization' : 'Token token=' + this.auth.token,
         },
         success : function(d,s,x) {
           // delete from queue
-          _t.removePageResult(id);
+          this.removePageResult(id);
 
           // update color history
-          if (d && d.color) {
-            _t.appendToColorHistory(d.color);
-            _t.setDailyReport(d.daily);
+          if (d && d.success) {
+            if (d.color) {
+              this.appendToColorHistory(d.color);
+            }
+
+            if (d.daily) {
+              this.setDailyReport(d.daily);
+            }
           }
-        },
-        error : function(x,s,e) { }
+        }.bind(this),
+        error : function(x,s,e) {}.bind(this)
       });
     }
   },
 
   // Get data and send to get processed. Pass id for specific, otherwise start from the top
   processPageResult : function(id) {
-    var _t = this;
-
     chrome.storage.local.get('retry-queue', function(items) {
       var queue = items['retry-queue'];
       if (typeof(queue) == 'undefined') queue = {}
@@ -392,15 +390,13 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
       var data = queue[id];
       if (typeof(data) != 'undefined') {
-        _t.sendPageResult(id,data);
+        this.sendPageResult(id,data);
       }
-    });
+    }.bind(this));
   },
 
   // Append item to retry queue
   queuePageResult : function(data) {
-    var _t = this;
-
     chrome.storage.local.get('retry-queue', function(items) {
       var id = (new Date()).getTime() + '-' + Math.ceil(Math.random() * 10000000),
       queue = items['retry-queue'];
@@ -408,15 +404,13 @@ jQuery.extend(true, YourInternetColor.prototype, {
       queue[id] = data;
 
       chrome.storage.local.set({'retry-queue' : queue}, function() {
-        _t.processPageResult(id);
-      });
-    });
+        this.processPageResult(id);
+      }.bind(this));
+    }.bind(this));
   },
 
   // Remove page result
   removePageResult : function(id) {
-    var _t = this;
-
     chrome.storage.local.get('retry-queue', function(items) {
       var queue = items['retry-queue']
       if (typeof(queue) == 'undefined') queue = {};
@@ -425,14 +419,14 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
         chrome.storage.local.set({'retry-queue' : queue}, function() {
           // Process additional requests, if any
-          _t.resendIntv = setTimeout(function() {
-            _t.processPageResult();
-          }, _t.resendIntvTime);
-        });
+          this.resendIntv = setTimeout(function() {
+            this.processPageResult();
+          }, this.resendIntvTime);
+        }.bind(this));
       } catch(e) {
         // 
       }
-    });
+    }.bind(this));
   }
 });
 
@@ -467,8 +461,6 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
   // Query a result for today's colors
   prepareBrowserActionIcon : function() {
-    var _t = this;
-
     chrome.storage.local.get('daily-report', function(items) {
       var data = items['daily-report'];
       if (typeof(data) == 'undefined') {
@@ -481,14 +473,12 @@ jQuery.extend(true, YourInternetColor.prototype, {
         data.count = 0;
       }
 
-      _t.setBrowserActionIcon(data);
-    });
+      this.setBrowserActionIcon(data);
+    }.bind(this));
   },
 
   // Update browser action color info
   setBrowserActionIcon : function(data) {
-    var _t = this;
-
     // Icon
     var c = document.getElementById(this.icon_canvas_id), ctx = c.getContext('2d');
     ctx.fillStyle = '#' + data.hex;
@@ -497,7 +487,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
     // Title
     var pages_text = (data.count == 1 ? 'page' : 'pages');
-    var text = _t.info.name + ': #' + data.hex + ' (' + data.count + ' ' + pages_text + ' today)';
+    var text = this.info.name + ': #' + data.hex + ' (' + data.count + ' ' + pages_text + ' today)';
     chrome.browserAction.setTitle({title: text});
   }
 });
@@ -508,42 +498,48 @@ jQuery.extend(true, YourInternetColor.prototype, {
 jQuery.extend(true, YourInternetColor.prototype, {
   // Get latest history, prepare to appending
   prepareNewTabVisual : function() {
-    // var _t = this;
-    //
-    // // Get latest from history
-    // jQuery.ajax(_t.endpoints.api_url('colors'), {
-    //   method: 'GET',
-    //   data : {},
-    //   headers : {
-    //     'Authorization' : 'Token token=' + _t.auth.token,
-    //   },
-    //   success : function(d,s,x) {
-    //     if (d.success && d.colors) {
-    //       $.each(d.colors, function(i,v) {
-    //         _t.history.push(v)
-    //       });
-    //     }
-    //   },
-    //   error : function(x,s,e) { }
-    // });
+    // TODO
   },
+});
 
-  sendColorHistory : function(all) {
-    // proto websocket
-  },
 
-  // Add to color history, last 100 or so.
-  appendToColorHistory : function(d) {
-    // var _t = this;
-    // _t.history.unshift(d);
-    // // TODO : slice after 100
-  },
+// --- COLOR HISTORY STORAGE --------------------------------------------------
+jQuery.extend(true, YourInternetColor.prototype, {
+  // Get and store latest color history for user
+  getLatestColorHistory : function() {
+    // Get latest from history
+    jQuery.ajax(this.endpoints.api_url('colors'), {
+      method: 'GET',
+      data : {},
+      headers : {
+        'Authorization' : 'Token token=' + this.auth.token,
+      },
+      success : function(d,s,x) {
+        if (d && d.success) {
+          // Overwrite, since we are getting the latest info
+          if (d.colors) {
+            this.history = d.colors;
+          }
 
-  setDailyReport : function(d) {
-    var _t = this;
-    chrome.storage.local.set({'daily-report': d}, function() {
-      _t.prepareBrowserActionIcon(d);
+          if (d.daily) {
+            this.setDailyReport(d.daily);
+          }
+        }
+      }.bind(this),
+      error : function(x,s,e) {}.bind(this)
     });
+  },
+
+  // Add latest received color to history
+  appendToColorHistory : function(d) {
+    this.history.unshift(d);
+  },
+
+  // Store the daily report info for browser action, etc
+  setDailyReport : function(d) {
+    chrome.storage.local.set({'daily-report': d}, function() {
+      this.prepareBrowserActionIcon(d);
+    }.bind(this));
   }
 
 });
