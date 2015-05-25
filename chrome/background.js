@@ -46,12 +46,6 @@ var YourInternetColor = function() {
     path_prefix : '/api'
   });
 
-  // DEV MODE
-  this.endpoints.domain = 'lh.dev';
-  this.endpoints.protocol = 'http';
-  this.endpoints.ws = 'ws';
-  this.endpoints.port = '3000';
-
   // Listen for response messages from content scripts
   chrome.extension.onRequest.addListener(function(req,s,cb) {
     if (req.name == this.msgName) this.preparePageForColor(req,s);
