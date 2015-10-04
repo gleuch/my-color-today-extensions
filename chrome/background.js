@@ -40,11 +40,11 @@ var YourInternetColor = function() {
   this.observeTabs = {};
   this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.4});
 
-  // this.endpoints = jQuery.extend(true, this.endpoints, {
-  //   domain : 'mycolor.today',
-  //   protocol : 'https',
-  //   path_prefix : '/api'
-  // });
+  this.endpoints = jQuery.extend(true, this.endpoints, {
+    domain : 'mycolor.today',
+    protocol : 'https',
+    path_prefix : '/api'
+  });
 
   // Listen for response messages from content scripts
   chrome.extension.onRequest.addListener(function(req,s,cb) {
