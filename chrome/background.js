@@ -190,10 +190,15 @@ jQuery.extend(true, YourInternetColor.prototype, {
         }
       }.bind(this),
       error : function(x,s,e) {
-        setTimeout(function() {
-          this.getCurrentAuthToken();
-        }.bind(this), 30000);
-      }.bind(this)
+        // If error is 401, get new tokens altogether
+        if (e == 'Unauthorized') {
+          _t.getAuthToken();
+
+        // Otherwise assume connection error, try again in 30 sec
+        } else {
+          setTimeout(function() {_t.getCurrentAuthToken();}, 30000);
+        }
+      }
     });
   },
 
@@ -209,10 +214,15 @@ jQuery.extend(true, YourInternetColor.prototype, {
         }
         d.requestHeaders.push({name: 'Authorization', value: 'Token token=' + this.auth.token});
         return {requestHeaders: d.requestHeaders};
-      }.bind(this),
-      {urls: ["http://lh.dev:3000/signup*", "*://color.camp/signup*"]},
+      },
+      {urls: ["http://lh.dev:3000/signup*", "http://localhost:3000/signup*", "*://color.camp/signup*", "*://mycolor.today/signup*"]},
       ["blocking", "requestHeaders"]
     );
+
+    // Close any existing windows
+    if (_t.signupWindow) {
+      chrome.windows.remove(_t.signupWindow.id, function() { });
+    }
 
     // open popup
     chrome.windows.create({
@@ -558,7 +568,10 @@ jQuery.extend(true, YourInternetColor.prototype, {
     /^http(s)?\:\/\/(www\.)?google\.com\/(_\/chrome\/newtab|webhp)/i,
 
     // ignore development localhost sites, as not really "browsing"
-    /^http(s)?:\/\/([a-z0-9\.\-]+)?(localhost|.*\.dev)(\:\d+)?\//i
+    /^http(s)?:\/\/([a-z0-9\.\-]+\.)?(localhost|.*\.dev)(\:\d+)?\//i,
+    
+    // ignore color.camp
+    /^http(s)?:\/\/([a-z0-9\.\-]+\.)??color\.camp\//i
   ]
 });
 
