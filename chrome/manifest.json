@@ -16,12 +16,12 @@
     "default_popup": "popup.html"
   },
   "description": "Visualize your Internet browsing.",
-  "homepage_url": "https://color.camp",
+  "homepage_url": "https://mycolor.today",
   "icons": {
     "128": "icon128.png"
   },
   "manifest_version": 2,
-  "name": "Color Camp",
+  "name": "What Color Is Your Internet?",
   "permissions": [
     "storage",
     "tabs",
@@ -30,10 +30,11 @@
     "webRequestBlocking",
     "<all_urls>"
   ],
-  "short_name": "Color.Camp",
-  "version": "0.3",
+  "short_name": "My Color Today",
+  "version": "0.4",
   "externally_connectable": {
     "matches": [
+      "*://mycolor.today/*",
       "*://color.camp/*",
       "http://lh.dev:3000/*",
       "http://localhost:3000/*"

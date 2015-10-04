@@ -19,5 +19,4 @@ var YourInternetColorTab = function() {};
 // Setup and wait...
 YourInternetColorTab.prototype.start = function() {
   var _t = this;
-  alert('t')
 };

@@ -1,4 +1,4 @@
-# Your Internet Color
+# My Color Today Browser Extensions
 
 **A WOrK iN PROgrESs. pArDOn fOR MY MeSS**
 *more info soon!*
@@ -16,4 +16,4 @@
 
 (C) 2015 Greg Leuch. http://gleu.ch
 
-Related: http://whatcolor.istheinter.net & https://github.com/gleuch/my-internet-color
+Related: https://mycolor.today & http://whatcolor.istheinter.net

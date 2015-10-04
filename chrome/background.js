@@ -38,10 +38,10 @@ var YourInternetColor = function() {
   this.auth = {token: null, secret: null, csrf: null};
   this.history = [];
   this.observeTabs = {};
-  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'Color Camp', version: 0.2});
+  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.4});
 
   this.endpoints = jQuery.extend(true, this.endpoints, {
-    domain : 'color.camp',
+    domain : 'mycolor.today',
     protocol : 'https',
     path_prefix : '/api'
   });
@@ -157,7 +157,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
           this.getAuthToken();
         }.bind(this), 30000);
       }.bind(this)
-    }.bind(this));
+    });
   },
 
   // Get current authorize token from server
@@ -192,13 +192,15 @@ jQuery.extend(true, YourInternetColor.prototype, {
       error : function(x,s,e) {
         // If error is 401, get new tokens altogether
         if (e == 'Unauthorized') {
-          _t.getAuthToken();
+          this.getAuthToken();
 
         // Otherwise assume connection error, try again in 30 sec
         } else {
-          setTimeout(function() {_t.getCurrentAuthToken();}, 30000);
+          setTimeout(function() {
+            this.getCurrentAuthToken();
+          }.bind(this), 30000);
         }
-      }
+      }.bind(this)
     });
   },
 
@@ -212,16 +214,18 @@ jQuery.extend(true, YourInternetColor.prototype, {
             break;
           }
         }
-        d.requestHeaders.push({name: 'Authorization', value: 'Token token=' + this.auth.token});
+        if (this.auth && this.auth.token) {
+          d.requestHeaders.push({name: 'Authorization', value: 'Token token=' + this.auth.token});
+        }
         return {requestHeaders: d.requestHeaders};
-      },
+      }.bind(this),
       {urls: ["http://lh.dev:3000/signup*", "http://localhost:3000/signup*", "*://color.camp/signup*", "*://mycolor.today/signup*"]},
       ["blocking", "requestHeaders"]
     );
 
     // Close any existing windows
-    if (_t.signupWindow) {
-      chrome.windows.remove(_t.signupWindow.id, function() { });
+    if (this.signupWindow) {
+      chrome.windows.remove(this.signupWindow.id, function() { });
     }
 
     // open popup
@@ -377,7 +381,11 @@ jQuery.extend(true, YourInternetColor.prototype, {
             }
           }
         }.bind(this),
-        error : function(x,s,e) {}.bind(this)
+        error : function(x,s,e) {
+          if (e == 'Unauthorized') {
+            this.getAuthToken();
+          }
+        }.bind(this)
       });
     }
   },
@@ -570,8 +578,8 @@ jQuery.extend(true, YourInternetColor.prototype, {
     // ignore development localhost sites, as not really "browsing"
     /^http(s)?:\/\/([a-z0-9\.\-]+\.)?(localhost|.*\.dev)(\:\d+)?\//i,
     
-    // ignore color.camp
-    /^http(s)?:\/\/([a-z0-9\.\-]+\.)??color\.camp\//i
+    // ignore color.camp and mycolor.today
+    /^http(s)?:\/\/([a-z0-9\.\-]+\.)??(color\.camp|mycolor\.today)\//i
   ]
 });
 
