@@ -1,0 +1,102 @@
+/*
+* Your Internet Color
+* a piece by @gleuch <http://gleu.ch>
+* (c)2015, all rights reserved
+*
+* -----------------------------------------------------------------------------
+*
+* Extension page stylesheet
+*
+*/
+
+@-webkit-keyframes rotater {
+    0% { margin: 0 0 0 -150px; }
+   50% { margin: 0 -150px 0 0; }
+  100% { margin: 0 0 0 -150px; }
+}
+
+@keyframes rotater {
+    0% { margin: 0 0 0 -150px; }
+   50% { margin: 0 -150px 0 0; }
+  100% { margin: 0 0 0 -150px; }
+}
+
+html, html * {font-weight: 500; -webkit-text-rendering: optimizeLegibility; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; font-smoothing: antialiased;}
+html {font-size: 62.5%;}
+body, h1, h2, h3, h4, h5, h6, td, dt, dd, li, p {font-family: Arial,Helvetica,sans-serif;}
+h1, h2, h3, h4, h5, h6, strong, b, th, dt {font-weight: 600; color: #1E1E1E; padding: 0; margin: 0;}
+a, span {font-weight: inherit;}
+p, div, li, td, dd {color: #1E1E1E;}
+a {-webkit-transition: color .2s ease-out;}
+a:focus, a:hover {color: #404040; text-decoration: none;}
+
+body ::selection {background: rgba(20,20,20,.08);}
+
+
+
+html,body {width: 250px; height: 305px; padding: 0; margin: 0;}
+
+
+.btn {
+  display: inline-block;
+  padding: 5px 12px;
+  font-weight: bold;
+  background-color: #bbbbbc;
+  color: #fff;
+  text-decoration: none;
+  outline: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-transition: color .2s ease-out, background-color .2s ease-out;
+  transition: color .2s ease-out, background-color .2s ease-out;
+}
+.btn:focus, .btn:hover {background-color: #9a9a9a; color: #fff;}
+.btn.btn-inline {margin-top: -.5em;}
+.btn.btn-lg {
+  padding: 20px 40px;
+}
+.right {float: right;}
+
+
+
+
+
+
+#loading {
+  display: none;
+  position: fixed;
+  bottom: 50%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 54px;
+  color: #b0b0b0;
+  font-weight: bold;
+}
+#loading span {
+  display: inline-block;
+  -webkit-transform-origin: center center;
+  transform-origin: center center;
+  -webkit-animation: rotater 1s infinite linear;
+  animation: rotater 1s infinite linear;
+}
+
+body.loading #loading {display: block;}
+body.loading #content {display: none;}
+
+
+.canvas {position: fixed; top: 55px; left: 0px; right: 0px; padding: 100% 0 0 0;}
+.canvas .wrapper {position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;}
+.canvas .content {position: absolute; top: 40%; left: 0; right: 0; font-weight: bold; text-align: center;}
+
+#login {}
+
+.buttons {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 15px 10px;
+  font-size: 1.4rem;
+  line-height: 1.33em;
+}
