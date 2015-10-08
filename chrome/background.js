@@ -38,7 +38,7 @@ var YourInternetColor = function() {
   this.auth = {token: null, secret: null, csrf: null};
   this.history = [];
   this.observeTabs = {};
-  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.4});
+  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.5});
 
   // this.endpoints = jQuery.extend(true, this.endpoints, {
   //   domain : 'mycolor.today',
