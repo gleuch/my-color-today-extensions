@@ -31,11 +31,10 @@
     "<all_urls>"
   ],
   "short_name": "My Color Today",
-  "version": "0.4",
+  "version": "0.5",
   "externally_connectable": {
     "matches": [
       "*://mycolor.today/*",
-      "*://color.camp/*",
       "http://lh.dev:3000/*",
       "http://localhost:3000/*"
     ]

@@ -38,7 +38,7 @@ var YourInternetColor = function() {
   this.auth = {token: null, secret: null, csrf: null};
   this.history = [];
   this.observeTabs = {};
-  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.4});
+  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.5});
 
   this.endpoints = jQuery.extend(true, this.endpoints, {
     domain : 'mycolor.today',
@@ -92,14 +92,14 @@ jQuery.extend(true, YourInternetColor.prototype, {
         this.auth = items['auth-token'];
 
         if (typeof(this.auth.user) == 'undefined' || !this.auth.user) {
-          this.requireSignup();
+          this.getAuthToken();
         } else {
           this.completeInit();
         }
       }
 
       // Connect and show visual in chrome://newtab
-      this.prepareNewTabVisual();
+      // this.prepareNewTabVisual();
 
     }.bind(this));
   },
@@ -497,8 +497,9 @@ jQuery.extend(true, YourInternetColor.prototype, {
     chrome.browserAction.setIcon({imageData: {'38' : ctx.getImageData(0,0,38,38)}});
 
     // Title
-    var pages_text = (data.count == 1 ? 'page' : 'pages');
-    var text = this.info.name + ': #' + data.hex + ' (' + data.count + ' ' + pages_text + ' today)';
+    var pages_text = data.pages_count + ' ' + (data.pages_count == 1 ? 'page' : 'pages');
+    var sites_text = data.sites_count + ' ' + (data.sites_count == 1 ? 'site' : 'sites');
+    var text = this.info.name +"\n" + 'Today: #' + data.hex + "\n" + pages_text + ' / ' + sites_text;
     chrome.browserAction.setTitle({title: text});
   }
 });
