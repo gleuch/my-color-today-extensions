@@ -92,7 +92,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
         this.auth = items['auth-token'];
 
         if (typeof(this.auth.user) == 'undefined' || !this.auth.user) {
-          this.requireSignup();
+          this.getAuthToken();
         } else {
           this.completeInit();
         }
