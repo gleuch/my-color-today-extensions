@@ -1,11 +1,11 @@
-var YourInternetColorPopup = function() {
+var MyColorTodayPopup = function() {
   this.user = null;
   this.report = null;  
   this.initialize();
 };
 
 
-jQuery.extend(YourInternetColorPopup.prototype, {
+jQuery.extend(MyColorTodayPopup.prototype, {
   
   initialize : function() {
     this.checkUserLoggedIn();
@@ -88,5 +88,5 @@ jQuery.extend(YourInternetColorPopup.prototype, {
 
 
 (function() {
-  var colorPopup = new YourInternetColorPopup();
+  var colorPopup = new MyColorTodayPopup();
 })();

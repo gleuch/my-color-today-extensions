@@ -1,7 +1,7 @@
 /*
-* Your Internet Color
+* MyColor.Today, Chrome Browser Extension
 * a piece by @gleuch <http://gleu.ch>
-* (c)2015, all rights reserved
+* (c) 2015, all rights reserved
 *
 * -----------------------------------------------------------------------------
 *
@@ -11,7 +11,7 @@
 * -----------------------------------------------------------------------------
 *
 * How it works:
-* - Initialize script [ new YourInternetColor() ]
+* - Initialize script [ new MyColorToday() ]
 *   - Create default canvas for browser action
 *   - Add listener for when tab page is loaded
 *   - Add listener for receiving msgs back from page
@@ -26,7 +26,7 @@
 
 
 // Initialize the script
-var YourInternetColor = function() {
+var MyColorToday = function() {
   var d = new Date(), tabActiveTimeout;
 
   this.historyIntv = null;
@@ -34,11 +34,11 @@ var YourInternetColor = function() {
   this.resendIntv = null;
   this.resendIntvTime = 10 * 1000; // stagger every 10 seconds
   this.icon_canvas_id = 'iconcolorcanvas';
-  this.msgName = 'yourInternetColor_' + d.getTime();
+  this.msgName = 'myColorToday_' + d.getTime();
   this.auth = {token: null, secret: null, csrf: null};
   this.history = [];
   this.observeTabs = {};
-  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'My Color Today', version: 0.5});
+  this.info = (typeof(chrome.runtime.getManifest) == 'function' ? chrome.runtime.getManifest() : {name: 'MyColor.Today', version: 0.6});
 
   this.endpoints = jQuery.extend(true, this.endpoints, {
     domain : 'mycolor.today',
@@ -81,7 +81,7 @@ var YourInternetColor = function() {
 
 // --- INITIALIZE / FIRST TIME SETUP ------------------------------------------
 //
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   // Start initialize functions b checking if user has an auth token
   startInit : function() {
     // Check if user has auth token
@@ -254,7 +254,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 // --- PAGE PROCESSING --------------------------------------------------------
 // Send content script to message back when window has loaded (images, etc.)
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   checkTabLoaded : function(tab) {
     var info = this.observeTabs[tab.id];
 
@@ -275,7 +275,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
       chrome.tabs.executeScript(obj.tabId, {file: 'page.js'}, function() {
         // On success, run code to start load cheeck
         chrome.tabs.executeScript(obj.tabId, {
-          code: "this.yourInternetColorPage = new YourInternetColorPage(); this.yourInternetColorPage.msgName = '" + this.msgName + "'; this.yourInternetColorPage.start();"
+          code: "this.myColorTodayPage = new MyColorTodayPage(); this.myColorTodayPage.msgName = '" + this.msgName + "'; this.myColorTodayPage.start();"
         }, function() {}.bind(this));
       }.bind(this));
     }
@@ -444,7 +444,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // --- AVERAGE COLOR PROCESSING -----------------------------------------------
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   // Determine the average color from a list of items
   getAvgColorFromItems : function(items) {
     var ct = Object.keys(items).length, ct_with_color = 0, sums = {r: 0, g: 0, b: 0}, rgb = [0,0,0], hex;
@@ -468,7 +468,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // --- BROWSER ACTION ---------------------------------------------------------
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
 
   // Query a result for today's colors
   prepareBrowserActionIcon : function() {
@@ -507,7 +507,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 // --- NEWTAB VISUAL ----------------------------------------------------------
 
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   // Get latest history, prepare to appending
   prepareNewTabVisual : function() {
     // TODO
@@ -516,7 +516,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // --- COLOR HISTORY STORAGE --------------------------------------------------
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   // Get and store latest color history for user
   getLatestColorHistory : function() {
     // Get latest from history
@@ -558,7 +558,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // --- URL FILTERING & BLACKLISTS ---------------------------------------------
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   // Check URL and ip address against blacklisted sites/ips
   isValidPageRequest : function(url,ip) {
     // Is request to self or not an http/https request?
@@ -586,7 +586,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // --- ENDPOINTS --------------------------------------------------------------
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
 
   endpoints : {
     api_url : function(action,data) {
@@ -615,7 +615,7 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // --- MISC FUNCTIONS ---------------------------------------------------------
-jQuery.extend(true, YourInternetColor.prototype, {
+jQuery.extend(true, MyColorToday.prototype, {
   // UTF-8 safe URI encoding
   encodeUrl: function(str) {return window.btoa(encodeURIComponent(escape(str)));},
 
@@ -639,6 +639,6 @@ jQuery.extend(true, YourInternetColor.prototype, {
 
 
 // Start it up!
-this.yourInternetColor = new YourInternetColor();
+this.myColorToday = new MyColorToday();
 
 // kthxbye! xoxo -gleuch

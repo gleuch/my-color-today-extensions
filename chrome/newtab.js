@@ -1,7 +1,7 @@
 /*
-* Your Internet Color
+* MyColor.Today, Chrome Browser Extension
 * a piece by @gleuch <http://gleu.ch>
-* (c)2015, all rights reserved
+* (c) 2015, all rights reserved
 *
 * -----------------------------------------------------------------------------
 *
@@ -13,10 +13,10 @@
 */
 
 
-var YourInternetColorTab = function() {};
+var MyColorTodayTab = function() {};
 
 
 // Setup and wait...
-YourInternetColorTab.prototype.start = function() {
+MyColorTodayTab.prototype.start = function() {
   var _t = this;
 };
