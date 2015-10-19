@@ -1,7 +1,7 @@
 /*
-* Your Internet Color
+* MyColor.Today, Chrome Browser Extension
 * a piece by @gleuch <http://gleu.ch>
-* (c)2015, all rights reserved
+* (c) 2015, all rights reserved
 *
 * -----------------------------------------------------------------------------
 *
@@ -11,11 +11,11 @@
 */
 
 
-var YourInternetColorPage = function() {};
+var MyColorTodayPage = function() {};
 
 
 // Setup and wait...
-YourInternetColorPage.prototype.start = function() {
+MyColorTodayPage.prototype.start = function() {
   // Check if window.onload has already fired
   if (document.readyState == 'complete') {
     this.triggerResponse();
@@ -27,7 +27,7 @@ YourInternetColorPage.prototype.start = function() {
 
 
 // Send response back to page, include some additional info (todo later)
-YourInternetColorPage.prototype.triggerResponse = function() {
+MyColorTodayPage.prototype.triggerResponse = function() {
   var data = {
     name: this.msgName,
     pageWidth: window.innerWidth,

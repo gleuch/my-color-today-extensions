@@ -21,7 +21,7 @@
     "128": "icon128.png"
   },
   "manifest_version": 2,
-  "name": "What Color Is Your Internet?",
+  "name": "MyColor.Today",
   "permissions": [
     "storage",
     "tabs",
@@ -30,8 +30,8 @@
     "webRequestBlocking",
     "<all_urls>"
   ],
-  "short_name": "My Color Today",
-  "version": "0.5",
+  "short_name": "MyColor.Today",
+  "version": "0.6",
   "externally_connectable": {
     "matches": [
       "*://mycolor.today/*",
